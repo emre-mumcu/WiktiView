@@ -2,6 +2,10 @@
 
 An ASP.NET Core MVC (.NET 11) app for browsing and searching `wiktionary-de.json` (165k German words).
 
+## Data file
+
+`wiktionary-de.json` is not in the repository because of its size (~168 MB). After cloning, copy it into the repository root (next to `WiktiView.slnx`). To use a different location, change `Dictionary:DataFilePath` in `appsettings.json`.
+
 ## Running
 
 ```
