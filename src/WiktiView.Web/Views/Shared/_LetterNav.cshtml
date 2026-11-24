@@ -1,0 +1,8 @@
+@* Quick navigation by first letter of the German word. *@
+<nav class="d-flex flex-wrap gap-1 mb-3" aria-label="Harfe göre">
+    @for (var letter = 'A'; letter <= 'Z'; letter++)
+    {
+        <a class="btn btn-sm btn-outline-secondary" asp-controller="Words" asp-action="Index"
+           asp-route-q="@letter" asp-route-match="StartsWith" asp-route-sort="Alphabetical">@letter</a>
+    }
+</nav>

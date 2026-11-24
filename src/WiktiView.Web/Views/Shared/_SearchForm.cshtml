@@ -1,0 +1,77 @@
+@model SearchFormViewModel
+@{
+    var c = Model.Criteria;
+    int[] pageSizes = [10, 25, 50, 100];
+}
+<form method="get" asp-controller="Words" asp-action="Index" class="card card-body bg-body-tertiary mb-3">
+    <div class="row g-2">
+        <div class="col-12 col-lg-6">
+            <label for="q" class="form-label small mb-1">Aranacak metin</label>
+            <input id="q" name="q" value="@c.Q" class="form-control" placeholder="ör. Haus, sevmek, love" autofocus />
+        </div>
+        <div class="col-6 col-lg-3">
+            <label for="field" class="form-label small mb-1">Alan</label>
+            <select id="field" name="field" class="form-select">
+                @foreach (var field in Enum.GetValues<SearchField>())
+                {
+                    <option value="@field" selected="@(c.Field == field)">@Labels.Field(field)</option>
+                }
+            </select>
+        </div>
+        <div class="col-6 col-lg-3">
+            <label for="match" class="form-label small mb-1">Eşleşme</label>
+            <select id="match" name="match" class="form-select">
+                @foreach (var mode in Enum.GetValues<MatchMode>())
+                {
+                    <option value="@mode" selected="@(c.Match == mode)">@Labels.Match(mode)</option>
+                }
+            </select>
+        </div>
+        <div class="col-6 col-lg-3">
+            <label for="wordType" class="form-label small mb-1">Kelime türü</label>
+            <select id="wordType" name="wordType" class="form-select">
+                <option value="">Tümü</option>
+                @foreach (var (type, count) in Model.WordTypes)
+                {
+                    <option value="@type" selected="@(c.WordType == type)">@Labels.WordType(type) (@count.ToString("N0"))</option>
+                }
+            </select>
+        </div>
+        <div class="col-6 col-lg-2">
+            <label for="article" class="form-label small mb-1">Artikel</label>
+            <select id="article" name="article" class="form-select">
+                <option value="">Tümü</option>
+                @foreach (var article in Labels.Articles)
+                {
+                    <option value="@article" selected="@(c.Article == article)">@article</option>
+                }
+            </select>
+        </div>
+        <div class="col-6 col-lg-2">
+            <label for="sort" class="form-label small mb-1">Sıralama</label>
+            <select id="sort" name="sort" class="form-select">
+                @foreach (var order in Enum.GetValues<SortOrder>())
+                {
+                    <option value="@order" selected="@(c.Sort == order)">@Labels.Sort(order)</option>
+                }
+            </select>
+        </div>
+        <div class="col-6 col-lg-2">
+            <label for="pageSize" class="form-label small mb-1">Sayfa başına</label>
+            <select id="pageSize" name="pageSize" class="form-select">
+                @foreach (var size in pageSizes)
+                {
+                    <option value="@size" selected="@((c.PageSize ?? 25) == size)">@size</option>
+                }
+            </select>
+        </div>
+        <div class="col-12 col-lg-3 d-flex align-items-end gap-2">
+            <div class="form-check mb-2 me-auto">
+                <input class="form-check-input" type="checkbox" id="onlyTurkish" name="onlyTurkish" value="true" checked="@c.OnlyTurkish" />
+                <label class="form-check-label small" for="onlyTurkish">Türkçesi olanlar</label>
+            </div>
+            <a asp-controller="Words" asp-action="Index" class="btn btn-outline-secondary">Temizle</a>
+            <button type="submit" class="btn btn-primary">Ara</button>
+        </div>
+    </div>
+</form>

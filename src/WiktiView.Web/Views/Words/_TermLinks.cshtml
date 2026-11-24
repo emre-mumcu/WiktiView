@@ -1,0 +1,8 @@
+@model IReadOnlyList<string>
+@* Related terms (synonyms, antonyms) linking to an exact lookup. *@
+<div class="d-flex flex-wrap gap-1">
+    @foreach (var term in Model)
+    {
+        <a class="btn btn-sm btn-outline-secondary" asp-controller="Words" asp-action="Lookup" asp-route-term="@term">@term</a>
+    }
+</div>

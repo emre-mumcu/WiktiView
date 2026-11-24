@@ -1,0 +1,5 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/WiktiView.Web/WiktiView.Web.csproj" />
+  </Folder>
+</Solution>

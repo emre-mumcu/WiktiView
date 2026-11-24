@@ -1,0 +1,244 @@
+@model WordDetailsViewModel
+@{
+    var w = Model.Word;
+    ViewData["Title"] = w.Word;
+    var isNoun = !string.IsNullOrEmpty(w.Article) || !string.IsNullOrEmpty(w.Plural) || !string.IsNullOrEmpty(w.Genitive);
+    var isAdjective = !string.IsNullOrEmpty(w.Comparative) || !string.IsNullOrEmpty(w.Superlative);
+    var isVerb = !string.IsNullOrEmpty(w.Auxiliary) || !string.IsNullOrEmpty(w.PartizipII) || w.Conjugations is { Count: > 0 };
+    var senseExamples = w.Senses?.SelectMany(s => s.Examples ?? []).ToHashSet() ?? [];
+}
+
+<nav class="d-flex justify-content-between align-items-center mb-3 small">
+    @if (Model.Previous is not null)
+    {
+        <a asp-action="Details" asp-route-id="@Model.Previous.Id" class="btn btn-sm btn-outline-secondary">&laquo; @Model.Previous.Lemma</a>
+    }
+    else
+    {
+        <span></span>
+    }
+    <a asp-action="Index" asp-route-q="@w.Lemma" asp-route-match="StartsWith" asp-route-sort="Alphabetical" class="link-secondary">Listede göster</a>
+    @if (Model.Next is not null)
+    {
+        <a asp-action="Details" asp-route-id="@Model.Next.Id" class="btn btn-sm btn-outline-secondary">@Model.Next.Lemma &raquo;</a>
+    }
+    else
+    {
+        <span></span>
+    }
+</nav>
+
+<header class="mb-4">
+    <h1 class="mb-1">@w.Word</h1>
+    <div class="d-flex flex-wrap align-items-center gap-2 text-body-secondary">
+        <span class="badge text-bg-primary">@Labels.WordType(w.WordType)</span>
+        @if (!string.IsNullOrEmpty(w.Gender))
+        {
+            <span class="badge text-bg-secondary">@Labels.Gender(w.Gender)</span>
+        }
+        @if (!string.IsNullOrEmpty(w.Ipa))
+        {
+            <span>@w.Ipa</span>
+        }
+        @if (!string.IsNullOrEmpty(w.Hyphenation))
+        {
+            <span>· @w.Hyphenation</span>
+        }
+    </div>
+    @if (!string.IsNullOrEmpty(w.Audio))
+    {
+        <audio controls preload="none" src="@w.Audio" class="mt-2"></audio>
+    }
+    @if (!string.IsNullOrEmpty(w.Meaning))
+    {
+        <p class="lead mt-3 mb-0"><span class="badge text-bg-danger align-middle">TR</span> @w.Meaning</p>
+    }
+</header>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        @if (w.Senses is { Count: > 0 })
+        {
+            <section class="mb-4">
+                <h2 class="h5 border-bottom pb-1">Anlamlar</h2>
+                <ol class="list-unstyled">
+                    @foreach (var sense in w.Senses)
+                    {
+                        <li class="mb-3">
+                            <div>
+                                <span class="fw-semibold me-1">[@sense.Index]</span>
+                                @foreach (var tag in sense.Tags ?? [])
+                                {
+                                    <span class="badge text-bg-light border me-1">@tag</span>
+                                }
+                                @sense.Gloss
+                            </div>
+                            @if (sense.Examples is { Count: > 0 })
+                            {
+                                <ul class="small text-body-secondary mt-1">
+                                    @foreach (var example in sense.Examples)
+                                    {
+                                        <li><em>@example</em></li>
+                                    }
+                                </ul>
+                            }
+                        </li>
+                    }
+                </ol>
+            </section>
+        }
+
+        @if (!string.IsNullOrEmpty(w.Sample) && !senseExamples.Contains(w.Sample))
+        {
+            <section class="mb-4">
+                <h2 class="h5 border-bottom pb-1">Örnek</h2>
+                <p><em>@w.Sample</em></p>
+            </section>
+        }
+
+        @if (w.Conjugations is { Count: > 0 })
+        {
+            <section class="mb-4">
+                <h2 class="h5 border-bottom pb-1">Çekim</h2>
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered small">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col"></th>
+                                @foreach (var tense in w.Conjugations.Keys)
+                                {
+                                    <th scope="col">@Labels.Tense(tense)</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var (key, label) in Labels.Persons)
+                            {
+                                <tr>
+                                    <th scope="row">@label</th>
+                                    @foreach (var forms in w.Conjugations.Values)
+                                    {
+                                        <td>@forms.GetValueOrDefault(key)</td>
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                @if (w.Imperative is { Count: > 0 })
+                {
+                    <h3 class="h6">Imperativ</h3>
+                    <dl class="row small mb-0">
+                        @foreach (var (person, form) in w.Imperative)
+                        {
+                            <dt class="col-2">@person</dt>
+                            <dd class="col-10">@form</dd>
+                        }
+                    </dl>
+                }
+            </section>
+        }
+
+        @if (w.Translations is { Count: > 0 })
+        {
+            <section class="mb-4">
+                <h2 class="h5 border-bottom pb-1">Çeviriler</h2>
+                @foreach (var (language, translations) in w.Translations.OrderBy(t => t.Key == "tr" ? 0 : 1))
+                {
+                    <h3 class="h6 mt-3">@Labels.Language(language)</h3>
+                    <dl class="row small mb-0">
+                        @foreach (var group in translations.GroupBy(t => t.Sense ?? "–"))
+                        {
+                            <dt class="col-2">[@group.Key]</dt>
+                            <dd class="col-10">@string.Join(", ", group.Select(t => t.Word).Distinct())</dd>
+                        }
+                    </dl>
+                }
+            </section>
+        }
+    </div>
+
+    <aside class="col-lg-4">
+        <div class="card mb-3">
+            <div class="card-header">Dilbilgisi</div>
+            <div class="card-body">
+                <dl class="row small mb-0">
+                    <dt class="col-5">Lemma</dt>
+                    <dd class="col-7">@w.Lemma</dd>
+                    @if (isNoun)
+                    {
+                        <dt class="col-5">Artikel</dt>
+                        <dd class="col-7">@(w.Article ?? "–")</dd>
+                        <dt class="col-5">Cinsiyet</dt>
+                        <dd class="col-7">@Labels.Gender(w.Gender)</dd>
+                        <dt class="col-5">Çoğul</dt>
+                        <dd class="col-7">@(w.Plural ?? "–")</dd>
+                        <dt class="col-5">Genitiv</dt>
+                        <dd class="col-7">@(w.Genitive ?? "–")</dd>
+                    }
+                    @if (isAdjective)
+                    {
+                        <dt class="col-5">Komparativ</dt>
+                        <dd class="col-7">@(w.Comparative ?? "–")</dd>
+                        <dt class="col-5">Superlativ</dt>
+                        <dd class="col-7">@(w.Superlative ?? "–")</dd>
+                    }
+                    @if (isVerb)
+                    {
+                        <dt class="col-5">Yardımcı fiil</dt>
+                        <dd class="col-7">@Labels.Auxiliary(w.Auxiliary)</dd>
+                        <dt class="col-5">Partizip II</dt>
+                        <dd class="col-7">@(w.PartizipII ?? "–")</dd>
+                        @if (w.IsSeparable.HasValue)
+                        {
+                            <dt class="col-5">Ayrılabilir</dt>
+                            <dd class="col-7">@(w.IsSeparable.Value ? "Evet" : "Hayır")</dd>
+                        }
+                    }
+                </dl>
+            </div>
+        </div>
+
+        @if (w.Synonyms is { Count: > 0 })
+        {
+            <div class="card mb-3">
+                <div class="card-header">Eş anlamlılar</div>
+                <div class="card-body"><partial name="_TermLinks" model="w.Synonyms" /></div>
+            </div>
+        }
+
+        @if (w.Antonyms is { Count: > 0 })
+        {
+            <div class="card mb-3">
+                <div class="card-header">Zıt anlamlılar</div>
+                <div class="card-body"><partial name="_TermLinks" model="w.Antonyms" /></div>
+            </div>
+        }
+
+        <div class="card mb-3">
+            <div class="card-header">Kayıt</div>
+            <div class="card-body small">
+                <dl class="row mb-2">
+                    <dt class="col-5">Sıra no</dt>
+                    <dd class="col-7">@Model.Entry.Id.ToString("N0")</dd>
+                    <dt class="col-5">Dosya konumu</dt>
+                    <dd class="col-7">@Model.Entry.Offset.ToString("N0") B</dd>
+                    <dt class="col-5">Boyut</dt>
+                    <dd class="col-7">@Model.Entry.Length.ToString("N0") B</dd>
+                </dl>
+                <a href="https://de.wiktionary.org/wiki/@Uri.EscapeDataString(w.Lemma)" target="_blank" rel="noopener">Wiktionary'de aç</a>
+                · <a asp-action="Json" asp-route-id="@Model.Entry.Id">JSON</a>
+            </div>
+        </div>
+    </aside>
+</div>
+
+<section class="mt-2">
+    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#raw-json"
+            aria-expanded="false" aria-controls="raw-json">
+        Ham veriyi göster
+    </button>
+    <div class="collapse mt-2" id="raw-json">
+        <pre class="bg-body-tertiary border rounded p-3 small"><code>@Model.RawJson</code></pre>
+    </div>
+</section>

@@ -1,0 +1,68 @@
+@model WordListViewModel
+@{
+    ViewData["Title"] = Model.Criteria.HasQuery ? $"“{Model.Criteria.Q}” araması" : "Kelimeler";
+    var results = Model.Results;
+}
+
+<partial name="_SearchForm" model="new SearchFormViewModel(Model.Criteria, Model.WordTypes)" />
+<partial name="_LetterNav" />
+
+<p class="text-body-secondary small">
+    @if (results.TotalCount == 0)
+    {
+        <text>Sonuç bulunamadı.</text>
+    }
+    else
+    {
+        <text>
+            <strong>@results.TotalCount.ToString("N0")</strong> kayıttan
+            @results.FirstItemNumber.ToString("N0")–@results.LastItemNumber.ToString("N0") arası gösteriliyor
+            (sayfa @results.Page.ToString("N0") / @results.TotalPages.ToString("N0")).
+        </text>
+    }
+</p>
+
+@if (results.Items.Count > 0)
+{
+    <div class="table-responsive">
+        <table class="table table-sm table-hover align-top">
+            <thead>
+                <tr>
+                    <th scope="col">Kelime</th>
+                    <th scope="col">Tür</th>
+                    <th scope="col">Anlam</th>
+                    <th scope="col">Türkçe</th>
+                    <th scope="col">İngilizce</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in results.Items)
+                {
+                    var word = item.Word;
+                    var firstSense = word.Senses?.FirstOrDefault();
+                    <tr>
+                        <td class="text-nowrap">
+                            <a asp-action="Details" asp-route-id="@item.Entry.Id" class="fw-semibold">@word.Word</a>
+                            @if (!string.IsNullOrEmpty(word.Plural))
+                            {
+                                <div class="small text-body-secondary">Pl.: @word.Plural</div>
+                            }
+                        </td>
+                        <td><span class="badge text-bg-secondary">@Labels.WordType(word.WordType)</span></td>
+                        <td class="small">
+                            @firstSense?.Gloss
+                            @if (word.Senses is { Count: > 1 })
+                            {
+                                <span class="text-body-secondary">(+@(word.Senses.Count - 1) anlam)</span>
+                            }
+                        </td>
+                        <td class="small">@string.Join(", ", item.Entry.Turkish.Take(5))</td>
+                        <td class="small">@string.Join(", ", item.Entry.English.Take(5))</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <partial name="_Pager" model="Model" />
+}

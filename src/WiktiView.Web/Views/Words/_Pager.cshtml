@@ -1,0 +1,61 @@
+@model WordListViewModel
+@{
+    const int window = 2;
+    var results = Model.Results;
+    var first = Math.Max(1, results.Page - window);
+    var last = Math.Min(results.TotalPages, results.Page + window);
+
+    Dictionary<string, string> Route(int page) => Model.Criteria.ToRouteValues(page);
+}
+@if (results.TotalPages > 1)
+{
+    <nav aria-label="Sayfalar">
+        <ul class="pagination pagination-sm flex-wrap justify-content-center">
+            <li class="page-item @(results.HasPrevious ? "" : "disabled")">
+                <a class="page-link" asp-action="Index" asp-all-route-data="Route(results.Page - 1)">&laquo; Önceki</a>
+            </li>
+
+            @if (first > 1)
+            {
+                <li class="page-item"><a class="page-link" asp-action="Index" asp-all-route-data="Route(1)">1</a></li>
+                @if (first > 2)
+                {
+                    <li class="page-item disabled"><span class="page-link">…</span></li>
+                }
+            }
+
+            @for (var number = first; number <= last; number++)
+            {
+                <li class="page-item @(number == results.Page ? "active" : "")">
+                    <a class="page-link" asp-action="Index" asp-all-route-data="Route(number)">@number.ToString("N0")</a>
+                </li>
+            }
+
+            @if (last < results.TotalPages)
+            {
+                @if (last < results.TotalPages - 1)
+                {
+                    <li class="page-item disabled"><span class="page-link">…</span></li>
+                }
+                <li class="page-item">
+                    <a class="page-link" asp-action="Index" asp-all-route-data="Route(results.TotalPages)">@results.TotalPages.ToString("N0")</a>
+                </li>
+            }
+
+            <li class="page-item @(results.HasNext ? "" : "disabled")">
+                <a class="page-link" asp-action="Index" asp-all-route-data="Route(results.Page + 1)">Sonraki &raquo;</a>
+            </li>
+        </ul>
+    </nav>
+
+    <form method="get" asp-action="Index" class="d-flex justify-content-center align-items-center gap-2 small">
+        @foreach (var (key, value) in Model.Criteria.ToRouteValues(1))
+        {
+            <input type="hidden" name="@key" value="@value" />
+        }
+        <label for="goto-page">Sayfaya git:</label>
+        <input id="goto-page" type="number" name="page" min="1" max="@results.TotalPages" value="@results.Page"
+               class="form-control form-control-sm w-auto" />
+        <button type="submit" class="btn btn-sm btn-outline-secondary">Git</button>
+    </form>
+}

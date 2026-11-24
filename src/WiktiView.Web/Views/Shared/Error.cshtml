@@ -1,0 +1,21 @@
+@model ErrorViewModel
+@{
+    ViewData["Title"] = Model.IsNotFound ? "Bulunamadı" : "Hata";
+}
+
+@if (Model.IsNotFound)
+{
+    <h1 class="h3">Sayfa veya kayıt bulunamadı</h1>
+    <p class="text-body-secondary">Aradığınız kayıt mevcut değil.</p>
+}
+else
+{
+    <h1 class="h3 text-danger">Bir hata oluştu</h1>
+    <p class="text-body-secondary">İsteğiniz işlenirken beklenmeyen bir hata oluştu.</p>
+    @if (Model.ShowRequestId)
+    {
+        <p class="small">İstek kimliği: <code>@Model.RequestId</code></p>
+    }
+}
+
+<a asp-controller="Words" asp-action="Index" class="btn btn-primary">Aramaya dön</a>

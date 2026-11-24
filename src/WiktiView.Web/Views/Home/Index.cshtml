@@ -1,0 +1,34 @@
+﻿@model HomeViewModel
+@{
+    ViewData["Title"] = "Almanca Sözlük";
+    var snapshot = Model.Snapshot;
+    var metadata = snapshot.Metadata;
+}
+
+<div class="mb-4">
+    <h1 class="h3">Almanca Sözlük</h1>
+    <p class="text-body-secondary mb-0">
+        <strong>@snapshot.Entries.Count.ToString("N0")</strong> kayıt ·
+        Türkçe karşılığı olan <strong>@snapshot.TurkishCount.ToString("N0")</strong> ·
+        İngilizce çevirisi olan <strong>@snapshot.EnglishCount.ToString("N0")</strong>
+        @if (!string.IsNullOrEmpty(metadata.GeneratedAt))
+        {
+            <text>· Veri tarihi: @metadata.GeneratedAt</text>
+        }
+    </p>
+</div>
+
+<partial name="_SearchForm" model="new SearchFormViewModel(new SearchCriteria(), snapshot.WordTypeCounts)" />
+<partial name="_LetterNav" />
+
+<h2 class="h5 mt-4">Kelime türleri</h2>
+<div class="list-group">
+    @foreach (var (type, count) in snapshot.WordTypeCounts)
+    {
+        <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+           asp-controller="Words" asp-action="Index" asp-route-wordType="@type" asp-route-sort="Alphabetical">
+            <span>@Labels.WordType(type) <small class="text-body-secondary">(@type)</small></span>
+            <span class="badge text-bg-secondary rounded-pill">@count.ToString("N0")</span>
+        </a>
+    }
+</div>
